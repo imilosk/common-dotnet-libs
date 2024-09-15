@@ -1,0 +1,22 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <PackageId>IMilosk.Messaging.RabbitMq</PackageId>
+        <TargetFramework>net8.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+        <IsPackable>true</IsPackable>
+        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+        <Version>0.1.0</Version>
+        <Authors>Gregor Alujevič,Milosh Kostadinovski</Authors>
+        <PackageProjectUrl>https://github.com/imilosk/common-dotnet-libs</PackageProjectUrl>
+        <RepositoryUrl>https://github.com/imilosk/common-dotnet-libs</RepositoryUrl>
+        <RepositoryType>git</RepositoryType>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="RabbitMQ.Client" Version="6.8.1"/>
+    </ItemGroup>
+
+</Project>
