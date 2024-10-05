@@ -13,4 +13,5 @@ public enum FilterOperator
     IsNull,
     IsNotNull,
     Limit,
+    Offset,
 }

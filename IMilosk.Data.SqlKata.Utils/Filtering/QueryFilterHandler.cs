@@ -39,6 +39,9 @@ public static class QueryFilterHandler
             case FilterOperator.Limit:
                 query.Limit((int)(queryFilter.Value ?? 0));
                 break;
+            case FilterOperator.Offset:
+                query.Offset((int)(queryFilter.Value ?? 0));
+                break;
             default:
                 throw new ArgumentException($"Unsupported filter operator {queryFilter.FilterOperator}");
         }
