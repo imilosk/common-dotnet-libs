@@ -1,6 +1,8 @@
 ﻿using System.Globalization;
+using System.Text;
 using System.Xml.XPath;
 using HtmlAgilityPack;
+using IMilosk.Extensions.BaseTypeExtensions;
 using Microsoft.Extensions.Logging;
 using PuppeteerSharp;
 
@@ -15,56 +17,86 @@ public class HtmlLoop
     public HtmlLoop(ILogger logger)
     {
         _logger = logger;
+        _htmlWeb.OverrideEncoding = Encoding.UTF8;
     }
 
-    public async IAsyncEnumerable<IEnumerable<T>> Parse<T>(
+    public async IAsyncEnumerable<T> Parse<T>(
         Uri baseUrl,
-        string[] navigation,
-        string mainElementXPath,
-        string nextPageXPath,
+        Navigation[] navigationLevels,
         CultureInfo cultureInfo,
         bool useJs,
-        Func<XPathNavigator, T> delegateAction
+        Func<XPathNavigator, Uri, T> delegateAction
+    )
+    {
+        await foreach (var item in Parse(baseUrl, navigationLevels, cultureInfo, useJs, delegateAction,
+                           navigationLevels.Length))
+        {
+            yield return item;
+        }
+    }
+
+    private async IAsyncEnumerable<T> Parse<T>(
+        Uri baseUrl,
+        Navigation[] navigationLevels,
+        CultureInfo cultureInfo,
+        bool useJs,
+        Func<XPathNavigator, Uri, T> delegateAction,
+        int depth
     )
     {
         var currentPage = baseUrl;
 
-        var items = new List<T>();
+        var navigation = navigationLevels[0];
+
+        var mainElementXPath = navigation.MainElementXPath;
+        var nextPageXPath = navigation.NextPageXPath;
 
         do
         {
             var htmlDocument = await LoadHtmlDocument(currentPage, useJs);
             var rootNode = htmlDocument.DocumentNode ?? throw new Exception("Root element is null");
 
-            foreach (var navigationXpath in navigation)
-            {
-                var navigationPages = rootNode.SelectNodes(navigationXpath) ??
-                                      throw new Exception("Navigation pages not found");
+            var mainElements = ScrapePageForMainElements(rootNode, mainElementXPath);
 
-                foreach (var navigationPage in navigationPages)
+            if (mainElements is null)
+            {
+                continue;
+            }
+
+            if (depth == 1)
+            {
+                foreach (var item in ScrapeElements(mainElements, baseUrl, delegateAction))
                 {
-                    var navigationUrl = ExtractNavigationUrl(baseUrl, navigationPage);
-                    await foreach (var result in Parse(navigationUrl, navigation[..^1], mainElementXPath,
-                                       nextPageXPath, cultureInfo, useJs, delegateAction))
+                    yield return item;
+                }
+            }
+            else
+            {
+                foreach (var mainElement in mainElements)
+                {
+                    var navigationUrl = ExtractNavigationUrl(baseUrl, mainElement);
+
+                    await foreach (var item in Parse(
+                                       navigationUrl,
+                                       navigationLevels[1..],
+                                       cultureInfo,
+                                       useJs,
+                                       delegateAction,
+                                       depth - 1
+                                   ))
                     {
-                        items.AddRange(result);
+                        yield return item;
                     }
                 }
             }
 
-            if (navigation.Length == 0)
+            if (nextPageXPath.IsNullOrEmpty())
             {
-                var results = ScrapePage(rootNode, mainElementXPath, delegateAction);
-                items.AddRange(results);
-                yield return items;
+                continue;
+            }
 
-                _logger.LogInformation("Scraped page: {page}", currentPage.ToString());
-            }
-            else
-            {
-                currentPage = GetNextPageUrl(rootNode, baseUrl, nextPageXPath, cultureInfo);
-            }
-        } while (currentPage != baseUrl);
+            currentPage = GetNextPageUrl(rootNode, baseUrl, nextPageXPath, cultureInfo);
+        } while (currentPage != baseUrl && currentPage.PathAndQuery is not ("/" or ""));
     }
 
     private async Task<HtmlDocument> LoadHtmlDocument(Uri url, bool useJs)
@@ -127,28 +159,41 @@ public class HtmlLoop
     {
         var navigator = rootNode.CreateNavigator() ?? throw new Exception("Cannot create navigator");
         var nextPageUrl = navigator.GetValueOrDefault(nextPageXPath, string.Empty, cultureInfo);
+
         return UriConverter.ToAbsoluteUrl(baseUrl, nextPageUrl);
     }
 
-    private static IEnumerable<T> ScrapePage<T>(
+    private static HtmlNodeCollection? ScrapePageForMainElements(
         HtmlNode rootNode,
-        string mainElementXPath,
-        Func<XPathNavigator, T> delegateAction
+        string mainElementXPath
     )
     {
         mainElementXPath = string.IsNullOrWhiteSpace(mainElementXPath) ? "/" : mainElementXPath;
-        var nodes = rootNode.SelectNodes(mainElementXPath);
 
-        if (nodes is null)
+        return rootNode.SelectNodes(mainElementXPath);
+    }
+
+    private static IEnumerable<T> ScrapeElements<T>(
+        HtmlNodeCollection? elements,
+        Uri baseUrl,
+        Func<XPathNavigator, Uri, T> delegateAction
+    )
+    {
+        if (elements is null)
         {
             yield break;
         }
 
-        foreach (var node in nodes)
+        foreach (var node in elements)
         {
-            var navigator = node.CreateNavigator() ?? throw new Exception("Node navigator is null");
+            if (node is null)
+            {
+                continue;
+            }
 
-            yield return delegateAction(navigator);
+            var navigator = node.CreateNavigator() ?? throw new Exception("Navigator is null");
+
+            yield return delegateAction(navigator, baseUrl);
         }
     }
 }

@@ -23,61 +23,78 @@ public class HtmlLoopTests
     public async Task Test1()
     {
         _baseUrl = new Uri("https://www.meziantou.net/archives.htm");
-        string[] navigation =
+        Navigation[] navigationLevels =
         [
-            "//*[@class='o']//li//a/@href"
+            new Navigation
+            {
+                MainElementXPath = "//*[@class='o']//li//a/@href",
+                NextPageXPath = string.Empty,
+            },
+            new Navigation
+            {
+                MainElementXPath = "/",
+            },
         ];
 
-        var pages = _htmlLoop.Parse(
+        var articles = _htmlLoop.Parse(
             _baseUrl,
-            navigation,
-            "",
-            "",
-            CultureInfo.InvariantCulture,
+            navigationLevels,
+            _defaultCultureInfo,
             false,
             ParseArticle
         );
 
-        await foreach (var page in pages)
+        await foreach (var article in articles)
         {
-            Assert.IsType<Article>(page);
+            Assert.IsType<Article>(article);
         }
     }
 
     [Fact]
     public async Task Test2()
     {
-        _baseUrl = new Uri("https://www.stevejgordon.co.uk");
-        string[] navigation =
+        _baseUrl = new Uri("https://ayende.com/blog/");
+
+        Navigation[] navigationLevels =
         [
+            new Navigation
+            {
+                MainElementXPath = "//article",
+                NextPageXPath = "//*[contains(@class, 'next')]//a/@href",
+            }
         ];
 
-        var pages = _htmlLoop.Parse(
+        var articles = _htmlLoop.Parse(
             _baseUrl,
-            navigation,
-            "//article",
-            "",
-            CultureInfo.InvariantCulture,
+            navigationLevels,
+            _defaultCultureInfo,
             false,
             ParseArticle
         );
 
-        await foreach (var page in pages)
+        await foreach (var article in articles)
         {
-            Assert.IsType<Article>(page);
+            Assert.IsType<Article>(article);
         }
     }
 
-    private Article ParseArticle(XPathNavigator navigator)
+    private Article ParseArticle(XPathNavigator navigator, Uri uri)
     {
         var article = new Article
         {
             Title =
                 navigator
-                    .GetValueOrDefault("descendant::*[contains(@class, 'entry-title')]//*//text()",
-                        string.Empty,
-                        _defaultCultureInfo),
-            Link = new Uri("https://www.meziantou.net/using-mutex-t-to-synchronize-access-to-a-shared-resource.htm")
+                    .GetValueOrDefault("//article//header//h1/text()", string.Empty, _defaultCultureInfo),
+            Summary = StripHtml.StripHtmlTagsRegex().Replace(
+                navigator.GetValueOrDefault("substring(//article/div, 0, 300)", string.Empty, _defaultCultureInfo),
+                string.Empty),
+            Author = navigator.GetValueOrDefault("//article[@class='v']//li", string.Empty, _defaultCultureInfo),
+            Link = uri,
+            PublishDate =
+                navigator.GetValueOrDefault("//div[@class='x']//time", DateTime.MinValue, _defaultCultureInfo),
+            LastUpdatedTime =
+                navigator.GetValueOrDefault("//div[@class='x']//time", DateTime.MinValue, _defaultCultureInfo),
+            Source = "XPath",
         };
 
         return article;
