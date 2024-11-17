@@ -8,7 +8,7 @@
         <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
         <IsPackable>true</IsPackable>
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-        <Version>0.1.2</Version>
+        <Version>0.1.3</Version>
         <Authors>Gregor Alujevič,Milosh Kostadinovski</Authors>
         <PackageProjectUrl>https://github.com/imilosk/common-dotnet-libs</PackageProjectUrl>
         <RepositoryUrl>https://github.com/imilosk/common-dotnet-libs</RepositoryUrl>
@@ -16,11 +16,11 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="FluentMigrator" Version="5.2.0"/>
-        <PackageReference Include="FluentMigrator.Extensions.SqlServer" Version="5.2.0"/>
-        <PackageReference Include="FluentMigrator.Runner" Version="5.2.0"/>
-        <PackageReference Include="FluentMigrator.Runner.SqlServer" Version="5.2.0"/>
-        <PackageReference Include="IMilosk.Data.SqlClient.DatabaseConnector" Version="0.1.0"/>
+        <PackageReference Include="FluentMigrator" Version="6.2.0"/>
+        <PackageReference Include="FluentMigrator.Extensions.SqlServer" Version="6.2.0"/>
+        <PackageReference Include="FluentMigrator.Runner" Version="6.2.0"/>
+        <PackageReference Include="FluentMigrator.Runner.SqlServer" Version="6.2.0"/>
+        <PackageReference Include="IMilosk.Data.SqlClient.DatabaseConnector" Version="0.1.1"/>
     </ItemGroup>
 
 </Project>
