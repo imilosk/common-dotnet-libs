@@ -8,7 +8,7 @@
         <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
         <IsPackable>true</IsPackable>
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-        <Version>0.1.4</Version>
+        <Version>0.1.5</Version>
         <Authors>Gregor Alujevič,Milosh Kostadinovski</Authors>
         <PackageProjectUrl>https://github.com/imilosk/common-dotnet-libs</PackageProjectUrl>
         <RepositoryUrl>https://github.com/imilosk/common-dotnet-libs</RepositoryUrl>

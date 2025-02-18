@@ -4,6 +4,15 @@ namespace IMilosk.Data.SqlKata.Utils.Filtering;
 
 public static class QueryFilterHandler
 {
+    private static readonly Exception UnsupportedComparisonOperatorException =
+        new NotSupportedException("The filter operator is not a valid comparison operator.");
+
+    private static readonly Exception ParameterCannotBeNullException =
+        new NotSupportedException("Parameter cannot be null.");
+
+    private static readonly Exception UnsupportedFilterDataTypeException =
+        new NotSupportedException("Unsupported filter datatype.");
+
     internal static Query ApplyFilters(Query query, IEnumerable<QueryFilter> queryFilters)
     {
         foreach (var filter in queryFilters)
@@ -24,8 +33,10 @@ public static class QueryFilterHandler
                 or FilterOperator.Lt
                 or FilterOperator.Gte
                 or FilterOperator.Lte:
-                query.Where(queryFilter.Field, GetSqlOperator(queryFilter.FilterOperator),
-                    queryFilter.Value);
+                query.Where(queryFilter.Field,
+                    GetComparisonSqlOperator(queryFilter.FilterOperator),
+                    queryFilter.Value
+                );
                 break;
             case FilterOperator.Like:
                 query.WhereLike(queryFilter.Field, queryFilter.Value);
@@ -42,6 +53,15 @@ public static class QueryFilterHandler
             case FilterOperator.Offset:
                 query.Offset((int)(queryFilter.Value ?? 0));
                 break;
+            case FilterOperator.SortAsc:
+                query.OrderBy(queryFilter.Field);
+                break;
+            case FilterOperator.SortDesc:
+                query.OrderByDesc(queryFilter.Field);
+                break;
+            case FilterOperator.In:
+                ApplyInFilter(query, queryFilter);
+                break;
             default:
                 throw new ArgumentException($"Unsupported filter operator {queryFilter.FilterOperator}");
         }
@@ -49,7 +69,67 @@ public static class QueryFilterHandler
         return query;
     }
 
-    private static string GetSqlOperator(FilterOperator filterOperator)
+    private static void ApplyInFilter(Query query, QueryFilter queryFilter)
+    {
+        var filterValue = queryFilter.Value ?? throw ParameterCannotBeNullException;
+
+        switch (filterValue)
+        {
+            case IEnumerable<int>:
+                query.WhereIn(
+                    queryFilter.Field,
+                    queryFilter.Value as IEnumerable<int>
+                );
+                break;
+
+            case IEnumerable<long>:
+                query.WhereIn(
+                    queryFilter.Field,
+                    queryFilter.Value as IEnumerable<long>
+                );
+                break;
+
+            case IEnumerable<decimal>:
+                query.WhereIn(
+                    queryFilter.Field,
+                    queryFilter.Value as IEnumerable<decimal>
+                );
+                break;
+
+            case IEnumerable<string>:
+                query.WhereIn(
+                    queryFilter.Field,
+                    queryFilter.Value as IEnumerable<string>
+                );
+                break;
+
+            case IEnumerable<char>:
+                query.WhereIn(
+                    queryFilter.Field,
+                    queryFilter.Value as IEnumerable<char>
+                );
+                break;
+
+            case IEnumerable<Guid>:
+                query.WhereIn(
+                    queryFilter.Field,
+                    queryFilter.Value as IEnumerable<Guid>
+                );
+                break;
+
+            case IEnumerable<DateTime>:
+                query.WhereIn(
+                    queryFilter.Field,
+                    queryFilter.Value as IEnumerable<DateTime>
+                );
+                break;
+
+            default:
+                throw UnsupportedFilterDataTypeException;
+        }
+    }
+
+    private static string GetComparisonSqlOperator(FilterOperator filterOperator)
     {
         return filterOperator switch
         {
@@ -59,11 +139,7 @@ public static class QueryFilterHandler
             FilterOperator.Gte => ">=",
             FilterOperator.Lt => "<",
             FilterOperator.Lte => "<=",
-            FilterOperator.None or
-                FilterOperator.Like or
-                FilterOperator.IsNull or
-                FilterOperator.IsNotNull or
-                _ => throw new NotSupportedException($"The filter operator '{filterOperator}' is not supported.")
+            _ => throw UnsupportedComparisonOperatorException,
         };
     }
 }

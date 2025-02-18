@@ -14,4 +14,7 @@ public enum FilterOperator
     IsNotNull,
     Limit,
     Offset,
+    SortAsc,
+    SortDesc,
+    In,
 }
