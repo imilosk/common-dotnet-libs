@@ -9,57 +9,41 @@ public static class SqlDataMapper
     {
         var type = typeof(T);
         var columns = new List<DtoColumnMapping>();
-
-        foreach (var propertyInfo in type.GetProperties())
-        {
-            if (ShouldSkip(propertyInfo))
-            {
-                continue;
-            }
-
-            columns.Add(new DtoColumnMapping
-            {
-                FieldName = propertyInfo.Name,
-                TableColumnName = GetDatabaseFieldName(propertyInfo),
-            });
-        }
+        MapMembers(type.GetFields(), columns);
+        MapMembers(type.GetProperties(), columns);
 
         return columns;
     }
 
-    public static IList<string> GetColumnNames<T>()
+    private static void MapMembers(MemberInfo[] members, List<DtoColumnMapping> columns)
     {
-        var columnMapping = GetColumnMapping<T>();
-
-        return columnMapping.Select(mapping => mapping.FieldName).ToList();
-    }
-
-    public static Dictionary<string, object?> GetAnonymousObject<T>(T entity)
-    {
-        var type = typeof(T);
-        var dict = new Dictionary<string, object?>();
-
-        foreach (var propertyInfo in type.GetProperties())
+        foreach (var memberInfo in members)
         {
-            if (ShouldSkip(propertyInfo))
+            var memberInfoName = memberInfo.Name;
+            var tableColumnName = GetDatabaseFieldName(memberInfo);
+
+            if (ShouldSkip(memberInfo))
             {
                 continue;
             }
 
-            dict.Add(GetDatabaseFieldName(propertyInfo), propertyInfo.GetValue(entity));
+            var mapping = new DtoColumnMapping
+            {
+                FieldName = memberInfoName,
+                TableColumnName = tableColumnName
+            };
+            columns.Add(mapping);
         }
-
-        return dict;
     }
 
-    private static bool ShouldSkip(PropertyInfo fieldInfo)
+    private static bool ShouldSkip(MemberInfo fieldInfo)
     {
         var notMappedAttribute = fieldInfo.GetCustomAttribute(typeof(NotMappedAttribute), false);
 
         return notMappedAttribute is not null;
     }
 
-    private static string GetDatabaseFieldName(PropertyInfo fieldInfo)
+    private static string GetDatabaseFieldName(MemberInfo fieldInfo)
     {
         var columnAttribute = (ColumnAttribute?)fieldInfo.GetCustomAttribute(typeof(ColumnAttribute), false);
 
