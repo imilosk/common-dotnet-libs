@@ -1,6 +1,5 @@
 using System.Globalization;
 using System.Xml.XPath;
-using IMilosk.Extensions.BaseTypeExtensions;
 
 namespace IMilosk.WebParsingUtils;
 
@@ -20,7 +19,7 @@ public static class XPathNavigatorExtensions
 
         var expressionValue = GetXpathExpressionValue(navigator, xpath);
 
-        if (expressionValue.IsNullOrWhiteSpace())
+        if (string.IsNullOrWhiteSpace(expressionValue))
         {
             return defaultValue;
         }

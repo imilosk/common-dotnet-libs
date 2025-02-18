@@ -2,7 +2,6 @@
 using System.Text;
 using System.Xml.XPath;
 using HtmlAgilityPack;
-using IMilosk.Extensions.BaseTypeExtensions;
 using Microsoft.Extensions.Logging;
 using PuppeteerSharp;
 
@@ -90,7 +89,7 @@ public class HtmlLoop
                 }
             }
 
-            if (nextPageXPath.IsNullOrEmpty())
+            if (string.IsNullOrEmpty(nextPageXPath))
             {
                 continue;
             }

@@ -7,7 +7,7 @@
         <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
         <IsPackable>true</IsPackable>
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-        <Version>0.2.9</Version>
+        <Version>0.2.10</Version>
         <Authors>Milosh Kostadinovski</Authors>
         <PackageProjectUrl>https://github.com/imilosk/common-dotnet-libs</PackageProjectUrl>
         <RepositoryUrl>https://github.com/imilosk/common-dotnet-libs</RepositoryUrl>
@@ -17,10 +17,6 @@
     <ItemGroup>
         <PackageReference Include="HtmlAgilityPack" Version="1.11.71"/>
         <PackageReference Include="PuppeteerSharp" Version="20.0.5"/>
-    </ItemGroup>
-
-    <ItemGroup>
-        <ProjectReference Include="..\IMilosk.Extensions.BaseTypeExtensions\IMilosk.Extensions.BaseTypeExtensions.csproj"/>
     </ItemGroup>
 
 </Project>
