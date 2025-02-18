@@ -78,6 +78,7 @@ public abstract class MigrationBase : ForwardOnlyMigration
         return new MigrationContext(
             migrationProcessor,
             serviceProvider,
+            ApplicationContext,
             connection.ConnectionString
         );
     }
