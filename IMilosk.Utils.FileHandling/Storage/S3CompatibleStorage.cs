@@ -1,3 +1,4 @@
+using IMilosk.Utils.FileHandling.Extensions;
 using IMilosk.Utils.FileHandling.Settings;
 using Minio;
 using Minio.DataModel.Args;
@@ -6,11 +7,13 @@ namespace IMilosk.Utils.FileHandling.Storage;
 
 public class S3CompatibleStorage : IBlobStorage
 {
+    private readonly BlobStorageSettings _blobStorageSettings;
     private static readonly Dictionary<string, Dictionary<string, string>> ResponseContentTypeDictionaryCache = [];
     private readonly IMinioClient _minioClient;
 
     public S3CompatibleStorage(BlobStorageSettings blobStorageSettings)
     {
+        _blobStorageSettings = blobStorageSettings;
         _minioClient = new MinioClient()
             .WithEndpoint(blobStorageSettings.Endpoint)
             .WithCredentials(blobStorageSettings.AccessKeyId, blobStorageSettings.SecretAccessKey)
@@ -27,25 +30,139 @@ public class S3CompatibleStorage : IBlobStorage
     public async Task<Stream> CreateDownloadStream(string uri)
     {
         var s3Uri = new S3Uri(uri);
+        var downloadRequest = new DownloadRequest(s3Uri);
 
-        return await CreateDownloadStream(s3Uri.Bucket, s3Uri.Key);
+        return (await CreateDownloadStream(downloadRequest)).FileStream;
+    }
+
+    public async Task<Stream> CreateDownloadStream(string uri, S3VersionId s3VersionId)
+    {
+        var s3Uri = new S3Uri(uri);
+        var downloadRequest = new DownloadRequest(s3Uri, s3VersionId);
+
+        return (await CreateDownloadStream(downloadRequest)).FileStream;
     }
 
     public async Task<Stream> CreateDownloadStream(string bucket, string key)
     {
-        var memoryStream = new MemoryStream();
+        var s3Uri = new S3Uri(bucket, key);
+        var downloadRequest = new DownloadRequest(s3Uri);
 
-        _ = await _minioClient
-            .GetObjectAsync(
-                new GetObjectArgs()
-                    .WithBucket(bucket)
-                    .WithObject(key)
-                    .WithCallbackStream(stream => stream.CopyTo(memoryStream))
-            );
+        return (await CreateDownloadStream(downloadRequest)).FileStream;
+    }
 
-        memoryStream.Seek(0, SeekOrigin.Begin);
+    public async Task<Stream> CreateDownloadStream(string bucket, string key, S3VersionId s3VersionId)
+    {
+        var s3Uri = new S3Uri(bucket, key);
+        var downloadRequest = new DownloadRequest(s3Uri, s3VersionId);
 
-        return memoryStream;
+        return (await CreateDownloadStream(downloadRequest)).FileStream;
+    }
+
+    public async Task<Stream> CreateDownloadStream(S3Uri s3Uri)
+    {
+        var downloadRequest = new DownloadRequest(s3Uri);
+
+        return (await CreateDownloadStream(downloadRequest)).FileStream;
+    }
+
+    public async Task<Stream> CreateDownloadStream(S3Uri s3Uri, S3VersionId s3VersionId)
+    {
+        var downloadRequest = new DownloadRequest(s3Uri, s3VersionId);
+
+        return (await CreateDownloadStream(downloadRequest)).FileStream;
+    }
+
+    public async Task<DownloadResult> CreateDownloadStream(DownloadRequest downloadRequest)
+    {
+        var s3RequestBuilder = new S3RequestBuilder(_blobStorageSettings)
+            .WithS3Uri(downloadRequest.S3Uri)
+            .WithVersionId(downloadRequest.S3VersionId)
+            .WithMethod(HttpMethod.Get)
+            .SignRequest();
+
+        var request = s3RequestBuilder.CreateHttpRequest();
+
+        var httpClient = _minioClient.Config.HttpClient;
+        var response = await httpClient.SendAsync(
+            request,
+            HttpCompletionOption.ResponseHeadersRead
+        );
+
+        var downloadResponse = response.ToS3DownloadResult(downloadRequest.S3Uri.Key);
+        downloadResponse.FileStream = await response.Content.ReadAsStreamAsync();
+
+        return downloadResponse;
+    }
+
+    public async Task<ObjectMetadata> GetObjectMetadata(string uri)
+    {
+        var s3Uri = new S3Uri(uri);
+        var downloadRequest = new DownloadRequest(s3Uri);
+
+        return await GetObjectMetadata(downloadRequest);
+    }
+
+    public async Task<ObjectMetadata> GetObjectMetadata(string uri, S3VersionId s3VersionId)
+    {
+        var s3Uri = new S3Uri(uri);
+        var downloadRequest = new DownloadRequest(s3Uri, s3VersionId);
+
+        return await GetObjectMetadata(downloadRequest);
+    }
+
+    public async Task<ObjectMetadata> GetObjectMetadata(string bucket, string key)
+    {
+        var s3Uri = new S3Uri(bucket, key);
+        var downloadRequest = new DownloadRequest(s3Uri);
+
+        return await GetObjectMetadata(downloadRequest);
+    }
+
+    public async Task<ObjectMetadata> GetObjectMetadata(string bucket, string key, S3VersionId s3VersionId)
+    {
+        var s3Uri = new S3Uri(bucket, key);
+        var downloadRequest = new DownloadRequest(s3Uri, s3VersionId);
+
+        return await GetObjectMetadata(downloadRequest);
+    }
+
+    public async Task<ObjectMetadata> GetObjectMetadata(S3Uri s3Uri)
+    {
+        var downloadRequest = new DownloadRequest(s3Uri);
+
+        return await GetObjectMetadata(downloadRequest);
+    }
+
+    public async Task<ObjectMetadata> GetObjectMetadata(S3Uri s3Uri, S3VersionId s3VersionId)
+    {
+        var downloadRequest = new DownloadRequest(s3Uri, s3VersionId);
+
+        return await GetObjectMetadata(downloadRequest);
+    }
+
+    public async Task<ObjectMetadata> GetObjectMetadata(DownloadRequest downloadRequest)
+    {
+        var getObjectArgs = new StatObjectArgs()
+            .WithBucket(downloadRequest.S3Uri.Bucket)
+            .WithObject(downloadRequest.S3Uri.Key);
+
+        if (downloadRequest.S3VersionId.IsValid())
+        {
+            getObjectArgs.WithVersionId(downloadRequest.S3VersionId.ToString());
+        }
+
+        var objectStat = await _minioClient.StatObjectAsync(getObjectArgs);
+
+        var objectMetadata = new ObjectMetadata
+        {
+            Etag = objectStat.ETag,
+            ObjectName = objectStat.ObjectName,
+            Size = objectStat.Size,
+            S3VersionId = objectStat.VersionId,
+        };
+
+        return objectMetadata;
     }
 
     public async Task<UploadResult> UploadStream(
@@ -79,7 +196,7 @@ public class S3CompatibleStorage : IBlobStorage
             Success = uploadSucceeded,
             Etag = response.Etag,
             ObjectName = response.ObjectName,
-            Size = response.Size
+            Size = response.Size,
         };
     }
 
@@ -113,7 +230,7 @@ public class S3CompatibleStorage : IBlobStorage
             Success = uploadSucceeded,
             Etag = response.Etag,
             ObjectName = response.ObjectName,
-            Size = response.Size
+            Size = response.Size,
         };
     }
 
@@ -148,6 +265,27 @@ public class S3CompatibleStorage : IBlobStorage
             Success = presigningSucceeded,
             PresignedUri = presignedUri,
         };
+    }
+
+    public async Task CreateBucketIfNotExists(string bucketName)
+    {
+        var bucketExists = await _minioClient.BucketExistsAsync(
+            new BucketExistsArgs().WithBucket(bucketName)
+        );
+
+        if (!bucketExists)
+        {
+            var makeBucketArgs = new MakeBucketArgs().WithBucket(bucketName);
+
+            await _minioClient.MakeBucketAsync(makeBucketArgs);
+        }
+    }
+
+    public async Task EnableBucketVersioning(string bucketName)
+    {
+        var args = new SetVersioningArgs().WithBucket(bucketName)
+            .WithVersioningEnabled();
+        await _minioClient.SetVersioningAsync(args);
     }
 
     private static Dictionary<string, string> GetResponseContentTypeDictionary(string contentType)

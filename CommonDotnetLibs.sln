@@ -23,6 +23,12 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IMilosk.Data.SqlKata.Utils"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IMilosk.Data.SqlClient.Tests", "IMilosk.Data.SqlClient.Tests\IMilosk.Data.SqlClient.Tests.csproj", "{F27748F5-30BF-4E4A-80D8-E2C029548759}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IMilosk.Data.SqlKata.Utils.Tests", "IMilosk.Data.SqlKata.Utils.Tests\IMilosk.Data.SqlKata.Utils.Tests.csproj", "{10BC01E9-B869-4350-B292-1AE9388B92C9}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IMilosk.Utils.FileHandling.Tests", "IMilosk.Utils.FileHandling.Tests\IMilosk.Utils.FileHandling.Tests.csproj", "{0057D696-8920-4CC9-9CBC-8364848A3E6D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IMilosk.Tests.Settings", "IMilosk.Tests.Settings\IMilosk.Tests.Settings.csproj", "{7B106E8F-2C5E-46D6-9E2D-4C5F8097CE2F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -72,5 +78,17 @@ Global
 		{F27748F5-30BF-4E4A-80D8-E2C029548759}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F27748F5-30BF-4E4A-80D8-E2C029548759}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F27748F5-30BF-4E4A-80D8-E2C029548759}.Release|Any CPU.Build.0 = Release|Any CPU
+		{10BC01E9-B869-4350-B292-1AE9388B92C9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{10BC01E9-B869-4350-B292-1AE9388B92C9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{10BC01E9-B869-4350-B292-1AE9388B92C9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{10BC01E9-B869-4350-B292-1AE9388B92C9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0057D696-8920-4CC9-9CBC-8364848A3E6D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0057D696-8920-4CC9-9CBC-8364848A3E6D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0057D696-8920-4CC9-9CBC-8364848A3E6D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0057D696-8920-4CC9-9CBC-8364848A3E6D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7B106E8F-2C5E-46D6-9E2D-4C5F8097CE2F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7B106E8F-2C5E-46D6-9E2D-4C5F8097CE2F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7B106E8F-2C5E-46D6-9E2D-4C5F8097CE2F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7B106E8F-2C5E-46D6-9E2D-4C5F8097CE2F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
