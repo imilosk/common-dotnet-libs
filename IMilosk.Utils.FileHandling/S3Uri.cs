@@ -41,6 +41,12 @@ public partial class S3Uri
         (Bucket, Key) = ParseBucketAndKey(uri);
     }
 
+    public S3Uri(string bucket, string key)
+    {
+        Bucket = bucket;
+        Key = key;
+    }
+
     private static (string Bucket, string Key) ParseBucketAndKey(string uri)
     {
         return ParseBucketAndKey(new Uri(uri));
